@@ -1,0 +1,12 @@
+.vscode/**
+.gitignore
+node_modules
+src/**
+tsconfig.json
+.eslintrc.json
+.gitattributes
+*.map
+*.ts
+!out/**/*.js
+media/**/*.css
+!media/styles.css
