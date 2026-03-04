@@ -2,7 +2,7 @@
   "name": "push-it",
   "displayName": "Push It",
   "description": "Interfaz visual para Git - Commits, Push, Pull y más",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -73,7 +73,7 @@
     "version control"
   ],
   "bugs": {
-    "url": "https://github.com/TU-USUARIO/push-it/issues"
+    "url": "https://github.com/Luxury213/push-it/issues"
   },
-  "homepage": "https://github.com/TU-USUARIO/push-it#readme"
+  "homepage": "https://github.com/Luxury213/push-it#readme"
 }
