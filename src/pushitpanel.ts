@@ -100,6 +100,48 @@ export class PushItPanel implements vscode.WebviewViewProvider {
                 <div id="sync-status" class="status-message"></div>
             </div>
 
+            <!-- SECCIÓN .GITIGNORE (NUEVA) -->
+            <div class="section" style="padding: 0; overflow: hidden;" id="gitignore-section">
+                <!-- Cabecera colapsable -->
+                <div class="gitignore-header" id="gitignore-header" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #1e2130; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 14px; font-weight: 600; color: #a78bfa;">📁 .gitignore</span>
+                        <span class="gitignore-count" id="gitignore-count" style="background: #6d28d9; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">0</span>
+                    </div>
+                    <span id="gitignore-toggle" style="color: #94a3b8; font-size: 16px;">▼</span>
+                </div>
+                
+                <!-- Contenido colapsable -->
+                <div id="gitignore-content" style="padding: 16px;">
+                    <!-- Patrones rápidos -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; margin-bottom: 10px;">⚡ PATRONES RÁPIDOS</div>
+                        <div class="patterns-grid" id="patterns-grid" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span class="pattern-chip" data-pattern="node_modules/" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">node_modules/</span>
+                            <span class="pattern-chip" data-pattern=".env" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">.env</span>
+                            <span class="pattern-chip" data-pattern="dist/" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">dist/</span>
+                            <span class="pattern-chip" data-pattern="*.log" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">*.log</span>
+                            <span class="pattern-chip" data-pattern=".DS_Store" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">.DS_Store</span>
+                            <span class="pattern-chip" data-pattern="coverage/" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">coverage/</span>
+                            <span class="pattern-chip" data-pattern="build/" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">build/</span>
+                            <span class="pattern-chip" data-pattern=".vscode/" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 16px; padding: 4px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #94a3b8; cursor: pointer;">.vscode/</span>
+                        </div>
+                    </div>
+                                    
+                    <!-- Patrón personalizado -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                        <input type="text" id="custom-pattern" placeholder="ej: *.temp, /build, !importante.js" style="flex: 1; background: #1e2130; border: 1px solid #2d3348; border-radius: 6px; color: white; padding: 8px 12px; font-size: 12px;">
+                        <button id="add-pattern-btn" style="background: #6d28d9; border: none; border-radius: 6px; color: white; padding: 8px 16px; font-size: 12px; cursor: pointer;">Añadir</button>
+                    </div>
+                    
+                    <!-- Lista de patrones ignorados -->
+                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px;">📋 PATRONES IGNORADOS</div>
+                    <div id="ignored-list" style="background: #1e2130; border: 1px solid #2d3348; border-radius: 6px; max-height: 150px; overflow-y: auto;">
+                        <div class="empty-message" style="padding: 12px; text-align: center; color: #64748b;">No hay patrones ignorados</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Changes list -->
             <div class="section">
                 <div class="section-header">
@@ -160,6 +202,127 @@ export class PushItPanel implements vscode.WebviewViewProvider {
                         changesList: document.getElementById('changes-list'),
                         changesCount: document.getElementById('changes-count')
                     };
+                    
+                    // Variables para .gitignore (NUEVO)
+                    let ignoredPatterns = [];
+                    let isGitIgnoreCollapsed = false;
+
+                    // Elementos del DOM para gitignore (NUEVO)
+                    const gitignoreHeader = document.getElementById('gitignore-header');
+                    const gitignoreContent = document.getElementById('gitignore-content');
+                    const gitignoreToggle = document.getElementById('gitignore-toggle');
+                    const gitignoreCount = document.getElementById('gitignore-count');
+                    const patternsGrid = document.getElementById('patterns-grid');
+                    const customPattern = document.getElementById('custom-pattern');
+                    const addPatternBtn = document.getElementById('add-pattern-btn');
+                    const ignoredList = document.getElementById('ignored-list');
+
+                    // Función para guardar estado colapsado (NUEVO)
+                    function saveCollapsedState(collapsed) {
+                        try {
+                            localStorage.setItem('pushit-gitignore-collapsed', collapsed.toString());
+                        } catch (e) {
+                            // Ignorar errores de localStorage
+                        }
+                    }
+
+                    // Función para cargar estado colapsado (NUEVO)
+                    function loadCollapsedState() {
+                        try {
+                            const saved = localStorage.getItem('pushit-gitignore-collapsed');
+                            return saved === 'true';
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
+                    // Colapsar/expandir (NUEVO)
+                    if (gitignoreHeader && gitignoreContent && gitignoreToggle) {
+                        // Cargar estado guardado
+                        isGitIgnoreCollapsed = loadCollapsedState();
+                        if (isGitIgnoreCollapsed) {
+                            gitignoreContent.style.display = 'none';
+                            gitignoreToggle.textContent = '▶';
+                        }
+                        
+                        gitignoreHeader.addEventListener('click', () => {
+                            const isHidden = gitignoreContent.style.display === 'none';
+                            gitignoreContent.style.display = isHidden ? 'block' : 'none';
+                            gitignoreToggle.textContent = isHidden ? '▼' : '▶';
+                            saveCollapsedState(!isHidden);
+                        });
+                    }
+
+                    // Actualizar lista de patrones ignorados (NUEVO)
+                    function updateIgnoredList(patterns) {
+                        if (!ignoredList) return;
+                        
+                        if (patterns.length > 0) {
+                            let html = '';
+                            patterns.forEach(pattern => {
+                                html += '<div class="ignored-item">' +
+                                    '<span>' + pattern + '</span>' +
+                                    '<span class="remove-btn" data-pattern="' + pattern + '">✕</span>' +
+                                    '</div>';
+                            });
+                            ignoredList.innerHTML = html;
+                            
+                            // Añadir eventos a los botones de eliminar
+                            document.querySelectorAll('.ignored-item .remove-btn').forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const pattern = e.target.dataset.pattern;
+                                    if (pattern) {
+                                        vscode.postMessage({ command: 'removeGitIgnore', pattern });
+                                    }
+                                });
+                            });
+                        } else {
+                            ignoredList.innerHTML = '<div class="empty-message" style="padding: 12px; text-align: center; color: #64748b;">No hay patrones ignorados</div>';
+                        }
+                        
+                        if (gitignoreCount) {
+                            gitignoreCount.textContent = patterns.length.toString();
+                        }
+                    }
+
+                    // Seleccionar patrones rápidos (NUEVO)
+                    if (patternsGrid) {
+                        patternsGrid.addEventListener('click', (e) => {
+                            const target = e.target;
+                            if (target.classList.contains('pattern-chip')) {
+                                target.classList.toggle('selected');
+                                const pattern = target.dataset.pattern;
+                                if (pattern) {
+                                    if (target.classList.contains('selected')) {
+                                        vscode.postMessage({ command: 'addGitIgnore', pattern });
+                                    } else {
+                                        vscode.postMessage({ command: 'removeGitIgnore', pattern });
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    // Añadir patrón personalizado (NUEVO)
+                    if (addPatternBtn && customPattern) {
+                        addPatternBtn.addEventListener('click', () => {
+                            const pattern = customPattern.value.trim();
+                            if (pattern) {
+                                vscode.postMessage({ command: 'addGitIgnore', pattern });
+                                customPattern.value = '';
+                            }
+                        });
+                        
+                        customPattern.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                const pattern = customPattern.value.trim();
+                                if (pattern) {
+                                    vscode.postMessage({ command: 'addGitIgnore', pattern });
+                                    customPattern.value = '';
+                                }
+                            }
+                        });
+                    }
                     
                     function showStatus(element, message, type) {
                         element.textContent = message;
@@ -316,10 +479,31 @@ export class PushItPanel implements vscode.WebviewViewProvider {
                                     showStatus(elements.syncStatus, 'Error: ' + msg.error, 'error');
                                 }
                                 break;
+
+                            // NUEVO: Caso para recibir contenido de .gitignore
+                            case 'gitIgnoreContent':
+                                if (msg.patterns) {
+                                    ignoredPatterns = msg.patterns;
+                                    updateIgnoredList(msg.patterns);
+                                    
+                                    // Marcar chips seleccionados
+                                    document.querySelectorAll('.pattern-chip').forEach(chip => {
+                                        const pattern = chip.getAttribute('data-pattern');
+                                        if (pattern && msg.patterns.includes(pattern)) {
+                                            chip.classList.add('selected');
+                                        } else {
+                                            chip.classList.remove('selected');
+                                        }
+                                    });
+                                }
+                                break;
                         }
                     });
                     
+                    // Inicializar
                     vscode.postMessage({ command: 'checkRemote' });
+                    // NUEVO: Solicitar contenido de .gitignore al iniciar
+                    vscode.postMessage({ command: 'getGitIgnore' });
                 })();
             </script>
         </body>

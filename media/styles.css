@@ -273,3 +273,56 @@ button:hover {
     font-size: 10px;
     margin-top: var(--space-lg);
 }
+/* ===== ESTILOS PARA .GITIGNORE ===== */
+.gitignore-header:hover {
+    background: #252a3a !important;
+}
+
+.pattern-chip {
+    transition: all 0.2s ease;
+}
+
+.pattern-chip:hover {
+    background: #252a3a !important;
+    border-color: #8b5cf6 !important;
+}
+
+.pattern-chip.selected {
+    background: #6d28d9 !important;
+    border-color: #8b5cf6 !important;
+    color: white !important;
+}
+
+#drop-zone.dragover {
+    border-color: #8b5cf6 !important;
+    background: rgba(139, 92, 246, 0.1) !important;
+}
+
+.ignored-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #2d3348;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+
+.ignored-item:last-child {
+    border-bottom: none;
+}
+
+.ignored-item:hover {
+    background: #252a3a;
+}
+
+.ignored-item .remove-btn {
+    color: #64748b;
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 14px;
+}
+
+.ignored-item .remove-btn:hover {
+    color: #ef4444;
+}
